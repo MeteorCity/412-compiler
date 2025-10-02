@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -Werror -g
 OBJS = main.o scanner.o parser.o ir.o
-TARGET = 412fe
+TARGET = 412alloc
 
 build: $(TARGET)
 
