@@ -57,7 +57,7 @@ string IRNode::toLine() {
 
     // OUTPUT
     else if (opcode == 8) {
-        return lex_mapping[opcode] + " " + to_string(vr1);
+        return lex_mapping[opcode] + " " + to_string(sr1);
     }
 
     // NOP
@@ -94,11 +94,6 @@ std::pair<vector<int>, vector<int>> IRNode::getDefsAndUses() {
         defs.push_back(3);
         uses.push_back(1);
         uses.push_back(2);
-    }
-
-    // OUTPUT
-    else if (opcode == 8) {
-        uses.push_back(1);
     }
 
     return {defs, uses};

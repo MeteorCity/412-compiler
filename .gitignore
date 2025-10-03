@@ -2,7 +2,7 @@
 *.o
 
 # Ignore test files
-*.c
+*.i
 
 # Ignore executable
 412alloc
