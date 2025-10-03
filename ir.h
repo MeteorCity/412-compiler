@@ -3,11 +3,14 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <vector>
+#include <utility>
 
 using std::array;
 using std::string;
 using std::to_string;
 using std::unique_ptr;
+using std::vector;
 
 extern array<string, 10> lex_mapping;
 
@@ -22,10 +25,12 @@ struct IRNode {
 
     IRNode(int line, int op, int s1, int s2, int s3, IRNode *previous)
         : line_number(line), opcode(op),
-          sr1(s1), vr1(0), pr1(0), nu1(0),
-          sr2(s2), vr2(0), pr2(0), nu2(0),
-          sr3(s3), vr3(0), pr3(0), nu3(0),
+          sr1(s1), vr1(-1), pr1(-1), nu1(-1),
+          sr2(s2), vr2(-1), pr2(-1), nu2(-1),
+          sr3(s3), vr3(-1), pr3(-1), nu3(-1),
           prev(previous), next(nullptr) {}
 
     string toString();
+    string toLine();
+    std::pair<vector<int>, vector<int>> getDefsAndUses();
 };

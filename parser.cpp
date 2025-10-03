@@ -1,13 +1,19 @@
-// #include "ir.h"
+#include "ir.h"
 #include "parser.h"
 #include "scanner.h"
-
-// TODO: Switch token schema to category being an int and create array mapping from int to category name
 
 // Parser stuff
 Parser::Parser(Scanner &scanner, IRNode *root) : scanner(scanner), root(root) {}
 
 void Parser::insert_new_node(int line, int opcode, int r1, int r2, int r3) {
+    if (opcode == 2) { // LOADI
+        maxSR = std::max(maxSR, r3);
+    } else if (opcode == 8) { // OUTPUT
+        maxSR = std::max(maxSR, r1);
+    } else if (opcode < 8) { // Everything else except NOP
+        maxSR = std::max(maxSR, std::max(r1, std::max(r2, r3)));
+    }
+
     auto new_node = make_unique<IRNode>(line, opcode, r1, r2, r3, root);
     root->next = std::move(new_node); // Transfer ownership of new_node to previous node
     root = root->next.get(); // Set root to new_node
@@ -19,7 +25,7 @@ int Parser::parse_file() {
 
     while (true) {
         // Check previous token for ENDFILE
-        if (next_token.category == 9) { // INEFFICIENCY
+        if (next_token.category == 9) {
             if (success) {
                 return operations;
             } else {

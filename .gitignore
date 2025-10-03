@@ -1,2 +1,8 @@
+# Ignore compiled files
 *.o
+
+# Ignore test files
+*.c
+
+# Ignore executable
 412alloc

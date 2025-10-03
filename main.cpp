@@ -1,5 +1,6 @@
 #include "ir.h"
 #include "parser.h"
+#include "renamer.h"
 #include "scanner.h"
 
 #include <iostream>
@@ -16,19 +17,26 @@ using std::string;
 using std::unordered_map;
 
 void print_help() {
-    cout << "Usage: 412fe [option]\n"
+    cout << "Usage: 412alloc [option]\n"
          << "Options:\n"
          << "  -h               Show this help message and exit\n"
-         << "  -s <filepath>    Scan file and print tokens\n"
-         << "  -p <filepath>    Parse file and report success/errors (default)\n"
-         << "  -r <filepath>    Parse and print intermediate representation"
+         << "  -x <filepath>    Scan, parse file, perform renaming, and print renaming to stdout\n"
+         << "   k <filepath>    Not implemented for code check 1"
          << endl;
+}
+
+void print_old_IR(IRNode *root) {
+    root = root->next.get(); // Skip the root dummy node
+    while (root) {
+        cout << root->toString() << endl;
+        root = root->next.get();
+    }
 }
 
 void print_IR(IRNode *root) {
     root = root->next.get(); // Skip the root dummy node
     while (root) {
-        cout << root->toString() << endl;
+        cout << root->toLine() << endl;
         root = root->next.get();
     }
 }
@@ -48,10 +56,8 @@ int main(int argc, char* argv[]) {
     }
 
     unordered_map<string, int> priorities;
-    priorities["-h"] = 5;
-    priorities["-r"] = 4;
-    priorities["-p"] = 3;
-    priorities["-s"] = 2;
+    priorities["-h"] = 3;
+    priorities["-x"] = 2;
     priorities[""] = 1;
 
     string flag = "";
@@ -80,9 +86,10 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // Default to the -p flag if no flag is found
+    // Log an error if no flag is found
     if (flag == "") {
-        flag = "-p";
+        cerr << "ERROR: no flag found, use -h flag for help" << endl;
+        return 1;
     }
 
     // Log the multiple flags error
@@ -94,28 +101,7 @@ int main(int argc, char* argv[]) {
 
     if (flag == "-h") {
         print_help();
-    } else if (flag == "-s") {
-        try {
-            Scanner scanner(filename);
-            scanner.scan_file();
-        } catch (runtime_error &e) {
-            return 1;
-        }
-    } else if (flag == "-p") {
-        try {
-            Scanner scanner(filename);
-            auto root = make_unique<IRNode>(-1, -1, -1, -1, -1, nullptr); // Dummy root node
-            Parser parser(scanner, root.get());
-            int operations = parser.parse_file();
-            if (operations == -1) {
-                cout << "Parse found errors." << endl;
-            } else {
-                cout << "Parse succeeded. Processed " << operations << " operations." << endl;
-            }
-        } catch (runtime_error &e) {
-            return 1;
-        }
-    } else if (flag == "-r") {
+    } else if (flag == "-x") {
         try {
             Scanner scanner(filename);
             auto root = make_unique<IRNode>(-1, -1, -1, -1, -1, nullptr); // Dummy root node
@@ -123,7 +109,11 @@ int main(int argc, char* argv[]) {
             int operations = parser.parse_file();
             if (operations == -1) {
                 cerr << "Due to syntax errors, run terminates." << endl;
+                return 1;
             } else {
+                Renamer renamer;
+                // print_old_IR(root.get());
+                renamer.rename_IR(operations, parser.maxSR, parser.root);
                 print_IR(root.get());
             }
         } catch (runtime_error &e) {
