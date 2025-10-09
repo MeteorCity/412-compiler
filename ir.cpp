@@ -8,92 +8,75 @@ array<string, 10> lex_mapping = {
 
 // LAB 1 toString() function
 string IRNode::toString() {
-    // MEMOP
-    if (opcode < 2) {
-        return lex_mapping[opcode] + "\t" + "[ sr" + to_string(sr1)
-                + " ], [ ], [ sr" + to_string(sr3) + " ]";
-    }
+    string prefix1 = opcode == LOADI || opcode == OUTPUT ? "val" : "sr";
+    string sr_prefix = "sr";
 
-    // LOADI
-    else if (opcode == 2) {
-        return lex_mapping[opcode] + "\t" + "[ val " + to_string(sr1)
-                + " ], [ ], [ sr" + to_string(sr3) + " ]";
-    }
-
-    // ARITHOP
-    else if (opcode < 8) {
-        return lex_mapping[opcode] + "\t" + "[ sr" + to_string(sr1) + " ], [ sr"
-                + to_string(sr2) + " ], [ sr" + to_string(sr3) + " ]";
-    }
-
-    // OUTPUT
-    else if (opcode == 8) {
-        return lex_mapping[opcode] + "\t" + "[ val " + to_string(sr1) + " ], [ ], [ ]";
-    }
-
-    // NOP
-    else if (opcode == 9) {
-        return lex_mapping[opcode] + "\t" + "[ ], [ ], [ ]";
-    }
-
-    return "UNKNOWN OPCODE";
+    return lex_mapping[opcode] + "\t" +
+            op1.toString(prefix1) + ", " +
+            op2.toString() + ", " +
+            op3.toString();
 }
 
 // LAB 2 toLine() function
 string IRNode::toLine() {
-    if (opcode < 2) {
-        return lex_mapping[opcode] + " r" + to_string(vr1) + " => r" + to_string(vr3);
+    switch (opcode) {
+        case LOAD:
+        case STORE:
+            return lex_mapping[opcode] + " r" + to_string(op1.vr) + " => r" + to_string(op3.vr);
+        case LOADI:
+            return lex_mapping[opcode] + " " + to_string(op1.sr) + " => r" + to_string(op3.vr);
+        case ADD:
+        case SUB:
+        case MULT:
+        case LSHIFT:
+        case RSHIFT:
+            return lex_mapping[opcode] + " r" + to_string(op1.vr) + ", r" + to_string(op2.vr) + " => r" + to_string(op3.vr);
+        case OUTPUT:
+            return lex_mapping[opcode] + " " + to_string(op1.sr);
+        case NOP:
+            return "nop";
+        default:
+            return "UNKNOWN OPCODE";
     }
-
-    // LOADI
-    else if (opcode == 2) {
-        return lex_mapping[opcode] + " " + to_string(sr1) + " => r" + to_string(vr3);
-    }
-
-    // ARITHOP
-    else if (opcode < 8) {
-        return lex_mapping[opcode] + " r" + to_string(vr1) + ", r" + to_string(vr2) + " => r" + to_string(vr3);
-    }
-
-    // OUTPUT
-    else if (opcode == 8) {
-        return lex_mapping[opcode] + " " + to_string(sr1);
-    }
-
-    // NOP
-    else if (opcode == 9) {
-        return "nop";
-    }
-
-    return "UNKNOWN OPCODE";
 }
 
-std::pair<vector<int>, vector<int>> IRNode::getDefsAndUses() {
-    vector<int> defs;
-    vector<int> uses;
+
+// Default value for prefix is "sr"
+string Operand::toString(string prefix) {
+    if (sr == -1) {
+        return "[ ]";
+    }
+    return "[ " + prefix + " " + to_string(sr) + " ]";
+}
+
+std::pair<vector<Operand*>, vector<Operand*>> IRNode::getDefsAndUses() {
+    vector<Operand*> defs;
+    vector<Operand*> uses;
     
-    // LOAD
-    if (opcode == 0) {
-        defs.push_back(3);
-        uses.push_back(1);
-    }
-
-    // STORE
-    else if (opcode == 1) {
-        uses.push_back(1);
-        uses.push_back(3);
-    }
-
-    // LOADI
-    else if (opcode == 2) {
-        defs.push_back(3);
-    }
-
-    // ARITHOP
-    else if (opcode < 8) {
-        defs.push_back(3);
-        uses.push_back(1);
-        uses.push_back(2);
+    switch (opcode) {
+        case LOAD:
+            defs.push_back(&op3);
+            uses.push_back(&op1);
+            break;
+        case STORE:
+            uses.push_back(&op1);
+            uses.push_back(&op3);
+            break;
+        case LOADI:
+            defs.push_back(&op3);
+            break;
+        case ADD:
+        case SUB:
+        case MULT:
+        case LSHIFT:
+        case RSHIFT:
+            defs.push_back(&op3);
+            uses.push_back(&op1);
+            uses.push_back(&op2);
+            break;
+        case OUTPUT:
+            uses.push_back(&op1);
+            break;
     }
 
     return {defs, uses};

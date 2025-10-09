@@ -70,7 +70,7 @@ int Parser::parse_file() {
                         next_token = scanner.get_next_token();
                         if (next_token.category == 10 || next_token.category == 9) {
                             operations += 1;
-                            insert_new_node(line, opcode, r1, 0, r3);
+                            insert_new_node(line, opcode, r1, -1, r3);
                             continue;
                         }
                     }
@@ -92,7 +92,7 @@ int Parser::parse_file() {
                         next_token = scanner.get_next_token();
                         if (next_token.category == 10 || next_token.category == 9) {
                             operations += 1;
-                            insert_new_node(line, 2, r1, 0, r3);
+                            insert_new_node(line, 2, r1, -1, r3);
                             continue;
                         }
                     }
@@ -156,7 +156,7 @@ int Parser::parse_file() {
                 next_token = scanner.get_next_token();
                 if (next_token.category == 10 || next_token.category == 9) {
                     operations += 1;
-                    insert_new_node(line, 8, r1, 0, 0);
+                    insert_new_node(line, 8, r1, -1, -1);
                     continue;
                 }
             }
@@ -168,7 +168,7 @@ int Parser::parse_file() {
             next_token = scanner.get_next_token();
             if (next_token.category == 10 || next_token.category == 9) {
                 operations += 1;
-                insert_new_node(line, 9, 0, 0, 0);
+                insert_new_node(line, 9, -1, -1, -1);
                 continue;
             }
             cerr << "ERROR " << line << ": Invalid NOP instruction format" << endl;
