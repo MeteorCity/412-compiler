@@ -6,12 +6,6 @@
 #include <vector>
 #include <utility>
 
-using std::array;
-using std::string;
-using std::to_string;
-using std::unique_ptr;
-using std::vector;
-
 enum Opcode {
     LOAD,
     STORE,
@@ -31,7 +25,7 @@ struct Operand {
     Operand(int sr, int vr, int pr, int nu)
         : sr(sr), vr(vr), pr(pr), nu(nu) {}
 
-    string toString(string prefix = "sr");
+    std::string toString(std::string prefix = "sr");
 };
 
 struct IRNode {
@@ -41,7 +35,7 @@ struct IRNode {
     Operand op2;
     Operand op3;
     IRNode* prev;
-    unique_ptr<IRNode> next;
+    std::unique_ptr<IRNode> next;
 
     IRNode(int line, int op, int s1, int s2, int s3, IRNode *previous)
         : line_number(line), opcode(op),
@@ -50,7 +44,8 @@ struct IRNode {
           op3(Operand(s3, -1, -1, -1)),
           prev(previous), next(nullptr) {}
 
-    string toString();
-    string toLine();
-    std::pair<vector<Operand*>, vector<Operand*>> getDefsAndUses();
+    std::string toString();
+    std::string toLine1();
+    std::string toLine2();
+    std::pair<std::vector<Operand*>, std::vector<Operand*>> getDefsAndUses();
 };

@@ -1,5 +1,11 @@
 #include "ir.h"
 
+using std::array;
+using std::string;
+using std::to_string;
+using std::unique_ptr;
+using std::vector;
+
 // Map ints to lexemes
 array<string, 10> lex_mapping = {
     "load", "store", "loadI", "add", "sub",
@@ -18,7 +24,7 @@ string IRNode::toString() {
 }
 
 // LAB 2 toLine() function
-string IRNode::toLine() {
+string IRNode::toLine1() {
     switch (opcode) {
         case LOAD:
         case STORE:
@@ -31,6 +37,28 @@ string IRNode::toLine() {
         case LSHIFT:
         case RSHIFT:
             return lex_mapping[opcode] + " r" + to_string(op1.vr) + ", r" + to_string(op2.vr) + " => r" + to_string(op3.vr);
+        case OUTPUT:
+            return lex_mapping[opcode] + " " + to_string(op1.sr);
+        case NOP:
+            return "nop";
+        default:
+            return "UNKNOWN OPCODE";
+    }
+}
+
+string IRNode::toLine2() {
+    switch (opcode) {
+        case LOAD:
+        case STORE:
+            return lex_mapping[opcode] + " r" + to_string(op1.pr) + " => r" + to_string(op3.pr);
+        case LOADI:
+            return lex_mapping[opcode] + " " + to_string(op1.sr) + " => r" + to_string(op3.pr);
+        case ADD:
+        case SUB:
+        case MULT:
+        case LSHIFT:
+        case RSHIFT:
+            return lex_mapping[opcode] + " r" + to_string(op1.pr) + ", r" + to_string(op2.pr) + " => r" + to_string(op3.pr);
         case OUTPUT:
             return lex_mapping[opcode] + " " + to_string(op1.sr);
         case NOP:
@@ -73,9 +101,6 @@ std::pair<vector<Operand*>, vector<Operand*>> IRNode::getDefsAndUses() {
             defs.push_back(&op3);
             uses.push_back(&op1);
             uses.push_back(&op2);
-            break;
-        case OUTPUT:
-            uses.push_back(&op1);
             break;
     }
 

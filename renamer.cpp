@@ -1,6 +1,8 @@
 #include "ir.h"
 #include "renamer.h"
 
+const int INF = 1e9;
+
 void Renamer::rename_IR(int operations, int maxSR, IRNode *root) {
     int VRName = 0;
     int SRToVR[maxSR + 1];

@@ -2,6 +2,14 @@
 #include "parser.h"
 #include "scanner.h"
 
+using std::array;
+using std::cerr;
+using std::endl;
+using std::make_unique;
+using std::string;
+using std::stoi;
+using std::to_string;
+
 // Parser stuff
 Parser::Parser(Scanner &scanner, IRNode *root) : scanner(scanner), root(root) {}
 

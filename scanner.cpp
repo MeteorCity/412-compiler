@@ -1,5 +1,14 @@
 #include "scanner.h"
 
+using std::array;
+using std::cerr;
+using std::cout;
+using std::endl;
+using std::ifstream;
+using std::runtime_error;
+using std::string;
+using std::to_string;
+
 array<string, 12> cat_mapping = {
     "MEMOP", "LOADI", "ARITHOP", "OUTPUT", "NOP", "CONSTANT",
     "REGISTER", "COMMA", "INTO", "ENDFILE", "NEWLINE", "ERROR"
