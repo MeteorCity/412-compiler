@@ -43,6 +43,13 @@ struct IRNode {
           op2(Operand(s2, -1, -1, -1)),
           op3(Operand(s3, -1, -1, -1)),
           prev(previous), next(nullptr) {}
+    
+    IRNode(int op, int s1, int p1, int p3, IRNode *previous)
+        : line_number(-1), opcode(op),
+          op1(Operand(s1, -1, p1, -1)),
+          op2(Operand(-1, -1, -1, -1)),
+          op3(Operand(-1, -1, p3, -1)),
+          prev(previous), next(nullptr) {}
 
     std::string toString();
     std::string toLine1();

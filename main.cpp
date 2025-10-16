@@ -98,7 +98,7 @@ int main(int argc, char* argv[]) {
 
     string flag = "";
     string filename = argv[2];
-    int maxlive;
+    int k;
 
     if (std::string(argv[1]) == "-x") {
         try {
@@ -117,7 +117,7 @@ int main(int argc, char* argv[]) {
         } catch (runtime_error &e) {
             return 1;
         }
-    } else if (parseInteger(argv[1], maxlive) && 3 <= maxlive && maxlive <= 64) {
+    } else if (parseInteger(argv[1], k) && 3 <= k && k <= 64) {
         try {
             Scanner scanner(filename);
             auto root = make_unique<IRNode>(-1, -1, -1, -1, -1, nullptr); // Dummy root node
@@ -128,9 +128,10 @@ int main(int argc, char* argv[]) {
                 return 1;
             } else {
                 Renamer renamer;
-                Allocator allocator(maxlive);
-                renamer.rename_IR(operations, parser.maxSR, parser.root);
-                allocator.allocate(root.get());
+                int maxlive = renamer.rename_IR(operations, parser.maxSR, parser.root);
+                // cout << "maxlive: " << maxlive << endl;
+                Allocator allocator(k, maxlive, root.get());
+                allocator.allocate();
                 print_block2(root.get());
             }
         } catch (runtime_error &e) {

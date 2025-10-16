@@ -9,5 +9,5 @@
 
 class Renamer {
     public:
-        void rename_IR(int operations, int maxSR, IRNode *root);
+        int rename_IR(int operations, int maxSR, IRNode *root);
 };
