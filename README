@@ -1,0 +1,35 @@
+//NAME: John Talghader
+//NETID: jat8
+
+# COMP412 Lab 2 – ILOC Compiler Allocator
+
+## Building the Program
+
+To build the program, run:
+```bash
+make build
+```
+
+This will compile all source files (main.cpp, scanner.cpp, parser.cpp, ir.cpp, renamer.cpp, allocator.cpp) and produce an executable named: 412fe
+
+To clean up generated files, including object files and the executable, run:
+```bash
+make clean
+```
+
+## Running the Program
+
+Invoke the program from the command line with the following command:
+```bash
+./412fe <flag> <input_file>
+```
+
+Where input_file is a file containing ILOC instructions to parse.
+
+## Command-Line Options
+
+The frontend supports the following command-line flags:
+
+- `-h` — Display a help message describing how to run the program. No input file needed.
+- `-x` — Scan, parse the file, perform renaming, and print the renaming result to stdout.
+- `k` — Number of physical registers to allocate (`3 <= k <= 64`). Allocates registers and prints the allocated block to stdout.
