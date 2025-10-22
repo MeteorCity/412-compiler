@@ -1,5 +1,5 @@
-CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -Werror -g
+CXX = g++ 
+CXXFLAGS = -O2 -std=c++17 -Wall -Wextra -Werror -g
 OBJS = main.o scanner.o parser.o ir.o renamer.o allocator.o
 TARGET = 412alloc
 

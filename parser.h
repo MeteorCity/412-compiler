@@ -8,7 +8,6 @@
 #include "scanner.h"
 
 class Parser {
-    int operations = 0;
     Scanner &scanner;
 
     private:

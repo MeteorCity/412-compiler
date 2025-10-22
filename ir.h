@@ -51,6 +51,16 @@ struct IRNode {
           op3(Operand(-1, -1, p3, -1)),
           prev(previous), next(nullptr) {}
 
+    // Custom destructor to avoid recursion causing stack overflow
+    ~IRNode() {
+        IRNode* current = next.release(); // release ownership
+        while (current) {
+            IRNode* tmp = current->next.release();
+            delete current;
+            current = tmp;
+        }
+    }
+
     std::string toString();
     std::string toLine1();
     std::string toLine2();

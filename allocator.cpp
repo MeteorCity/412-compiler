@@ -6,6 +6,7 @@ using std::cerr;
 using std::endl;
 using std::greater;
 using std::make_unique;
+using std::runtime_error;
 using std::string;
 using std::unordered_map;
 using std::upper_bound;
@@ -18,7 +19,7 @@ Allocator::Allocator(int k, int maxlive, IRNode *root) : k(k), maxlive(maxlive),
 void Allocator::insert(int opcode, int s1, int p1, int p3) {
     if (!root || !root->prev) {
         // Can't insert before if root is null or has no previous node
-        return;
+        throw runtime_error("Insert not possible due to null root or null prev node");
     }
 
     IRNode* prev = root->prev;
@@ -38,7 +39,7 @@ void Allocator::insert(int opcode, int s1, int p1, int p3) {
 }
 
 void Allocator::spill(int pr) {
-    // cout << "spill input: " << pr << endl;
+    // cout << "spill input, pr: " << pr << endl;
     int vr = PRToVR[pr];
 
     // If the VR doesn’t have a spill slot assign one
@@ -56,8 +57,10 @@ void Allocator::spill(int pr) {
     PRToVR[pr] = -1;
     PRToNU[pr] = INF;
 
+    int spillLoc = VRToSpillLoc[vr];
+
     // Insert new loadI operation
-    insert(2, nextSpillLoc - 4, nextSpillLoc - 4, k);
+    insert(2, spillLoc, spillLoc, k);
 
     // Insert new store operation
     insert(1, -1, pr, k);
@@ -81,7 +84,7 @@ void Allocator::restore(int vr, int pr) {
 }
 
 int Allocator::getPR(int vr, int nu) {
-    int pr;
+    int pr = -1;
     int maxNU = -1;
 
     if (freePRs.empty()) { // No free PR
@@ -136,7 +139,7 @@ void Allocator::allocate() {
 
         auto [defs, uses] = root->getDefsAndUses();
         for (Operand* use : uses) {
-            if (VRToPR[use->vr] == -1) {
+            if (VRToPR.find(use->vr) == VRToPR.end() || VRToPR[use->vr] == -1) {
                 use->pr = getPR(use->vr, use->nu);
                 restore(use->vr, use->pr);
             } else {

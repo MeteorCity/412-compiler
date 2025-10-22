@@ -6,6 +6,7 @@ using std::array;
 using std::cerr;
 using std::endl;
 using std::make_unique;
+using std::runtime_error;
 using std::string;
 using std::stoi;
 using std::to_string;
@@ -28,8 +29,9 @@ void Parser::insert_new_node(int line, int opcode, int r1, int r2, int r3) {
 }
 
 int Parser::parse_file() {
+    int operations = 0;
     bool success = true;
-    Token next_token;
+    Token next_token{-1, "", -1};
 
     while (true) {
         // Check previous token for ENDFILE
@@ -111,7 +113,7 @@ int Parser::parse_file() {
 
         // ARITHOP
         else if (next_token.category == 2) {
-            int opcode;
+            int opcode = -1;
             switch (next_token.lexeme[0]) {
                 case 'a': // add
                     opcode = 3;
@@ -128,6 +130,8 @@ int Parser::parse_file() {
                 case 'r': // rshift
                     opcode = 7;
                     break;
+                default:
+                    throw runtime_error("Insert not possible due to null root or null prev node");
             }
             next_token = scanner.get_next_token();
             if (next_token.category == 6) {

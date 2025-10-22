@@ -27,6 +27,7 @@ int Renamer::rename_IR(int operations, int maxSR, IRNode *root) {
         // Ignore nop
         if (root->opcode == NOP) {
             root=root->prev;
+            index--;
             continue;
         }
 
