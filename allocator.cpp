@@ -159,18 +159,14 @@ void Allocator::allocate() {
 
         for (Operand* def : defs) {
             def->pr = getPR(def->vr, def->nu);
-            PRMarked[def->pr] = true;
+
+            // If the definition isn't used again, free its PR
+            if (def->nu == INF && PRToVR[def->pr] != -1) {
+                freePR(def->pr);
+            }
         }
 
         root = root->next.get();
         // counter++;
-        // for (const auto& [key, value] : VRToPR) {
-        //     std::cout << key << " => " << value << std::endl;
-        // }
-
-        // for (int x : PRToVR) {
-        //     std::cout << x << " ";
-        // }
-        // std::cout << std::endl;
     }
 }

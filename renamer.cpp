@@ -32,10 +32,14 @@ int Renamer::rename_IR(int operations, int maxSR, IRNode *root) {
         }
 
         auto [defs, uses] = root->getDefsAndUses();
+
+        int unusedDef = 0;
         for (Operand* def : defs) {
             if (liveNow[def->sr]) {
                 liveNow[def->sr] = false;
                 liveCount--;
+            } else {
+                unusedDef++;
             }
 
             // cout << "Def " + to_string(def) << endl;
@@ -66,8 +70,8 @@ int Renamer::rename_IR(int operations, int maxSR, IRNode *root) {
             LU[use->sr] = index;
         }
 
-        if (liveCount > maxlive) {
-            maxlive = liveCount;
+        if (liveCount + unusedDef > maxlive) {
+            maxlive = liveCount + unusedDef;
         }
 
         index--;
