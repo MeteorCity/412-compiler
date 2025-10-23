@@ -53,17 +53,17 @@ void Allocator::spill(int pr) {
     // This is typically IR generation logic:
     // cout << "store PR" << pr << " -> [spill" << spillLoc << "]" << endl;
 
-    VRToPR[vr] = -1;
+    VRToPR.erase(vr);
     PRToVR[pr] = -1;
     PRToNU[pr] = INF;
 
     int spillLoc = VRToSpillLoc[vr];
 
     // Insert new loadI operation
-    insert(2, spillLoc, spillLoc, k);
+    insert(LOADI, spillLoc, spillLoc, k);
 
     // Insert new store operation
-    insert(1, -1, pr, k);
+    insert(STORE, -1, pr, k);
 }
 
 void Allocator::restore(int vr, int pr) {
@@ -74,13 +74,20 @@ void Allocator::restore(int vr, int pr) {
     VRToPR[vr] = pr;
     PRToVR[pr] = vr;
 
+    // If the vr can be rematerialized, rematerialize it now and return early
+    if (rematVRs.find(vr) != rematVRs.end()) {
+        // Insert new loadI operation
+        insert(LOADI, rematVRs[vr], rematVRs[vr], pr);
+        return;
+    }
+
     int spillLoc = VRToSpillLoc[vr];
 
     // Insert new loadI operation
-    insert(2, spillLoc, spillLoc, k);
+    insert(LOADI, spillLoc, spillLoc, k);
 
     // Insert new load operation
-    insert(0, -1, k, pr);
+    insert(LOAD, -1, k, pr);
 }
 
 int Allocator::getPR(int vr, int nu) {
@@ -88,15 +95,33 @@ int Allocator::getPR(int vr, int nu) {
     int maxNU = -1;
 
     if (freePRs.empty()) { // No free PR
-        for (int i = 0; i < k; i++) {
-            if (!PRMarked[i]) { // Not marked
-                if (PRToNU[i] > maxNU) {
-                    maxNU = PRToNU[i];
-                    pr = i;
+        // Choose rematerializable value first if it exists
+        if (!rematVRs.empty()) {
+            for (auto it = rematVRs.begin(); it != rematVRs.end(); ++it) {
+                int rematVR = it->first;
+
+                // Check whether the VR has a corresponding PR and whether that PR is marked
+                if (VRToPR.find(rematVR) != VRToPR.end() && !PRMarked[VRToPR[rematVR]]) {
+                    pr = VRToPR[rematVR];
+                    freePR(pr); // Free the rematerializable PR
+                    freePRs.pop_back(); // Pop the newly added PR, we're about to use it
+                    break;
                 }
             }
         }
-        spill(pr);
+
+        // If no valid rematerializable value was found, choose farthest next use
+        if (pr == -1) {
+            for (int i = 0; i < k; i++) {
+                if (!PRMarked[i]) { // Not marked
+                    if (PRToNU[i] > maxNU) {
+                        maxNU = PRToNU[i];
+                        pr = i;
+                    }
+                }
+            }
+            spill(pr);
+        }
     } else { // A free PR exists
         pr = freePRs.back();
         freePRs.pop_back();
@@ -134,12 +159,20 @@ void Allocator::allocate() {
 
     // Iterate until we reach end of linked list
     while (root != nullptr) {
+        // cout << endl;
         // cout << "Iteration: " << counter << endl;
-        fill(PRMarked.begin(), PRMarked.end(), false); // TODO: Make non-O(N)
 
         auto [defs, uses] = root->getDefsAndUses();
+
+        // 1. Pre-mark all PRs that are already allocated for uses
         for (Operand* use : uses) {
-            if (VRToPR.find(use->vr) == VRToPR.end() || VRToPR[use->vr] == -1) {
+            if (VRToPR.find(use->vr) != VRToPR.end()) {
+                PRMarked[VRToPR[use->vr]] = true;
+            }
+        }
+
+        for (Operand* use : uses) {
+            if (VRToPR.find(use->vr) == VRToPR.end()) {
                 use->pr = getPR(use->vr, use->nu);
                 restore(use->vr, use->pr);
             } else {
@@ -163,6 +196,15 @@ void Allocator::allocate() {
             // If the definition isn't used again, free its PR
             if (def->nu == INF && PRToVR[def->pr] != -1) {
                 freePR(def->pr);
+            } else {
+                // If the operation is a loadI, it can be rematerialized
+                if (root->opcode == LOADI) {
+                    // Assign the vr to its loadI value
+                    rematVRs[def->vr] = root->op1.sr;
+                } else {
+                    // vr is redefined, can't be rematerialized anymore
+                    rematVRs.erase(def->vr);
+                }
             }
         }
 

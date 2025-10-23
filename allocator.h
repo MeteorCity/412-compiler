@@ -20,6 +20,7 @@ class Allocator {
     std::vector<int> PRToNU;
     std::vector<bool> PRMarked;
     std::vector<int> freePRs;
+    std::unordered_map<int, int> rematVRs;
 
     public:
         explicit Allocator(int k, int maxlive, IRNode *root);
