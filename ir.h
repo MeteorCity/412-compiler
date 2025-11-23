@@ -62,7 +62,5 @@ struct IRNode {
     }
 
     std::string toString();
-    std::string toLine1();
-    std::string toLine2();
     std::pair<std::vector<Operand*>, std::vector<Operand*>> getDefsAndUses();
 };
