@@ -78,9 +78,9 @@ int main(int argc, char* argv[]) {
                 Renamer renamer;
                 Scheduler scheduler;
                 renamer.rename_IR(operations, parser.maxSR, parser.root);
-                scheduler.build_graph(root.get());
+                scheduler.buildGraph(root.get());
                 string dot = scheduler.dep_graph.toDot();
-                ofstream fout("dag.dot");
+                ofstream fout("dep_graph.dot");
                 fout << dot;
                 fout.close();
             }
@@ -99,8 +99,9 @@ int main(int argc, char* argv[]) {
                 return 1;
             } else {
                 Renamer renamer;
+                Scheduler scheduler;
                 renamer.rename_IR(operations, parser.maxSR, parser.root);
-                // Schedule here
+                scheduler.schedule(root.get());
             }
         } catch (runtime_error &e) {
             return 1;

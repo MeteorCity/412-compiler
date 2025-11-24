@@ -2,7 +2,7 @@
 #include "ir.h"
 #include "scheduler.h"
 
-void Scheduler::build_graph(IRNode *root) {
+void Scheduler::buildGraph(IRNode *root) {
     std::unordered_map<int, int> map; // Maps VRs to node IDs
     int lastStore = -1;
     std::vector<int> prevLoads;
@@ -65,6 +65,16 @@ void Scheduler::build_graph(IRNode *root) {
     }
 }
 
-int Scheduler::schedule(/*IRNode *root*/) {
+void Scheduler::computeNodePriorities() {
+    return;
+}
+
+int Scheduler::schedule(IRNode *root) {
+    // Build the dependency graph
+    buildGraph(root);
+
+    // Compute the priorities of each node
+    computeNodePriorities();
+
     return 0;
 }

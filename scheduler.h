@@ -10,6 +10,7 @@ class Scheduler {
     public:
         Graph dep_graph;
 
-        void build_graph(IRNode *root);
-        int schedule(/*IRNode *root*/);
+        void buildGraph(IRNode *root);
+        void computeNodePriorities();
+        int schedule(IRNode *root);
 };

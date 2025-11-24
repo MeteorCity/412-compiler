@@ -15,6 +15,7 @@ struct Node {
     Operand op2;
     Operand op3;
     std::string opString;
+    int priority;
 };
 
 struct Edge {
@@ -34,7 +35,7 @@ class Graph {
         // Add an edge u → v
         void addEdge(int from, int to, int latency);
 
-        std::vector<Edge>& getSuccessors(int id);
-        std::vector<Edge>& getPredecessors(int id);
+        std::vector<Edge>& getDependencies(int id);
+        std::vector<Edge>& getUsers(int id);
         std::string toDot();
 };

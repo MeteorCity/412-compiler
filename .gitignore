@@ -5,7 +5,7 @@
 *.i
 
 # Ignore executable
-412alloc
+schedule
 
 # Ignore graph visualization files
 *.dot
