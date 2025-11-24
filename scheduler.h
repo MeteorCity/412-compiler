@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <queue>
 
 #include "graph.h"
 #include "ir.h"

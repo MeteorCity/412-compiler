@@ -8,6 +8,12 @@
 
 #include "ir.h"
 
+enum EdgeTypes {
+    NORMAL,
+    SERIAL,
+    CONFLICT
+};
+
 struct Node {
     int id; // Unique node id
     int opcode;
@@ -20,20 +26,21 @@ struct Node {
 
 struct Edge {
     int to_node;
+    int edgeType;
     int latency;
 };
 
 class Graph {
-    std::vector<Node> nodes;
-    std::vector<std::vector<Edge>> edges;
-    std::vector<std::vector<Edge>> revEdges;
-
     public:
+        std::vector<Node> nodes;
+        std::vector<std::vector<Edge>> edges;
+        std::vector<std::vector<Edge>> revEdges;
+
         // Add a new node and return its internal ID
         int addNode(IRNode *operation);
 
         // Add an edge u → v
-        void addEdge(int from, int to, int latency);
+        void addEdge(int from, int to, int edgeType, int latency);
 
         std::vector<Edge>& getDependencies(int id);
         std::vector<Edge>& getUsers(int id);

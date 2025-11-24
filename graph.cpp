@@ -36,10 +36,10 @@ std::string Graph::toDot() {
 
             const Node &toNode = nodes[toIndex];
 
-            // Determine the edge kind by latency
+            // Determine the edge kind
             std::string kind;
-            if (e.latency == 0) kind = "Data";
-            else if (e.latency == 1) kind = "Serial";
+            if (e.edgeType == NORMAL) kind = "Data";
+            else if (e.edgeType == SERIAL) kind = "Serial";
             else kind = "Conflict";
 
             // Get the toNode's vr (the previously defined vr we're using in this operation)
@@ -67,25 +67,27 @@ int Graph::addNode(IRNode *operation) {
     Operand op3 = operation->op3;
     std::string opString = operation->toString();
 
-    // Add the node with currently uncalculated priority (-1)
-    nodes.push_back({id, opcode, op1, op2, op3, opString, -1});
+    // Add the node with 0 priority
+    nodes.push_back({id, opcode, op1, op2, op3, opString, 0});
     edges.emplace_back();
     revEdges.emplace_back();
     return id;
 }
 
-void Graph::addEdge(int from, int to, int latency) {
+void Graph::addEdge(int from, int to, int edgeType, int latency) {
     // Look for existing edge
     for (auto &e : edges[from]) {
         if (e.to_node == to) {
-            // Keep the edge with smaller latency
-            if (latency < e.latency) {
+            // Keep the edge with larger latency
+            if (latency > e.latency) {
                 e.latency = latency;
+                e.edgeType = edgeType;
 
                 // Update reverse edge as well
                 for (auto &re : revEdges[to]) {
                     if (re.to_node == from) {
                         re.latency = latency;
+                        re.edgeType = edgeType;
                         break;
                     }
                 }
@@ -95,8 +97,8 @@ void Graph::addEdge(int from, int to, int latency) {
     }
 
     // There's no existing edge so add normally
-    edges[from].push_back({to, latency});
-    revEdges[to].push_back({from, latency});
+    edges[from].push_back({to, edgeType, latency});
+    revEdges[to].push_back({from, edgeType, latency});
 }
 
 std::vector<Edge>& Graph::getDependencies(int id) {
