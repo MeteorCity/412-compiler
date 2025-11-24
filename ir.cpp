@@ -13,13 +13,25 @@ array<string, 10> lex_mapping = {
 };
 
 string IRNode::toString() {
-    string prefix1 = opcode == LOADI || opcode == OUTPUT ? "val" : "sr";
-    string sr_prefix = "sr";
-
-    return lex_mapping[opcode] + "\t" +
-            op1.toString(prefix1) + ", " +
-            op2.toString() + ", " +
-            op3.toString();
+    switch (opcode) {
+        case LOAD:
+        case STORE:
+            return lex_mapping[opcode] + " r" + to_string(op1.vr) + " => r" + to_string(op3.vr);
+        case LOADI:
+            return lex_mapping[opcode] + " " + to_string(op1.sr) + " => r" + to_string(op3.vr);
+        case ADD:
+        case SUB:
+        case MULT:
+        case LSHIFT:
+        case RSHIFT:
+            return lex_mapping[opcode] + " r" + to_string(op1.vr) + ", r" + to_string(op2.vr) + " => r" + to_string(op3.vr);
+        case OUTPUT:
+            return lex_mapping[opcode] + " " + to_string(op1.sr);
+        case NOP:
+            return "nop";
+        default:
+            return "UNKNOWN OPCODE";
+    }
 }
 
 // Default value for prefix is "sr"

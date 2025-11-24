@@ -1,6 +1,6 @@
 CXX = g++ 
 CXXFLAGS = -O2 -std=c++17 -Wall -Wextra -Werror -g
-OBJS = main.o scanner.o parser.o ir.o renamer.o
+OBJS = main.o scanner.o parser.o ir.o renamer.o graph.o scheduler.o
 TARGET = schedule
 
 build: $(TARGET)

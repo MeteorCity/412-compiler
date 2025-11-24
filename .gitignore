@@ -6,3 +6,10 @@
 
 # Ignore executable
 412alloc
+
+# Ignore graph visualization files
+*.dot
+*.pdf
+
+# Ignore vscode add-ons
+.vscode

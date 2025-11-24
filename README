@@ -31,3 +31,4 @@ Where input_file is a file containing ILOC instructions to schedule.
 The frontend supports the following optional command-line flags:
 
 - `-h` — Display a help message describing how to run the program. No input file needed.
+- `-g` — Output a .dot file for dependency graph visualization

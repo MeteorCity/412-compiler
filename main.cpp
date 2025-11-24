@@ -2,6 +2,7 @@
 #include "parser.h"
 #include "renamer.h"
 #include "scanner.h"
+#include "scheduler.h"
 
 #include <charconv>
 #include <iostream>
@@ -12,6 +13,7 @@ using std::cerr;
 using std::cout;
 using std::endl;
 using std::make_unique;
+using std::ofstream;
 using std::runtime_error;
 using std::string;
 using std::to_string;
@@ -20,6 +22,7 @@ void print_help() {
     cout << "Usage: schedule [option]\n"
          << "Options:\n"
          << "  -h               Show this help message and exit\n"
+         << "  -g               Output a .dot file for dependency graph visualization"
          << "  <filename>       Invoke schedule on the ILOC block in filename and output the scheduled block to stdout"
          << endl;
 }
@@ -50,35 +53,58 @@ int main(int argc, char* argv[]) {
     for (int i = 1; i < argc; i++) {
         if (std::string(argv[i]) == "-h") {
             print_help();
-            return 1;
+            return 0;
         }
     }
 
-    // Ensure there is only one argument besides the program name (the filename)
-    if (argc != 2) {
+    // Ensure there is a valid number of command-line arguments
+    if (argc > 3) {
         cerr << "ERROR: please specify a valid number of input arguments" << endl;
         print_help();
         return 1;
     }
 
-    string filename = argv[1];
-    int k;
-
-    try {
-        Scanner scanner(filename);
-        auto root = make_unique<IRNode>(-1, -1, -1, -1, -1, nullptr); // Dummy root node
-        Parser parser(scanner, root.get());
-        int operations = parser.parse_file();
-        if (operations == -1) {
-            cerr << "Due to syntax errors, run terminates." << endl;
+    if (string(argv[1]) == "-g") {
+        try {
+            string filename = argv[2];
+            Scanner scanner(filename);
+            auto root = make_unique<IRNode>(-1, -1, -1, -1, -1, nullptr); // Dummy root node
+            Parser parser(scanner, root.get());
+            int operations = parser.parse_file();
+            if (operations == -1) {
+                cerr << "Due to syntax errors, run terminates." << endl;
+                return 1;
+            } else {
+                Renamer renamer;
+                Scheduler scheduler;
+                renamer.rename_IR(operations, parser.maxSR, parser.root);
+                scheduler.build_graph(root.get());
+                string dot = scheduler.dep_graph.toDot();
+                ofstream fout("dag.dot");
+                fout << dot;
+                fout.close();
+            }
+        } catch (runtime_error &e) {
             return 1;
-        } else {
-            Renamer renamer;
-            renamer.rename_IR(operations, parser.maxSR, parser.root);
-            // Schedule here
         }
-    } catch (runtime_error &e) {
-        return 1;
+    } else {
+        try {
+            string filename = argv[1];
+            Scanner scanner(filename);
+            auto root = make_unique<IRNode>(-1, -1, -1, -1, -1, nullptr); // Dummy root node
+            Parser parser(scanner, root.get());
+            int operations = parser.parse_file();
+            if (operations == -1) {
+                cerr << "Due to syntax errors, run terminates." << endl;
+                return 1;
+            } else {
+                Renamer renamer;
+                renamer.rename_IR(operations, parser.maxSR, parser.root);
+                // Schedule here
+            }
+        } catch (runtime_error &e) {
+            return 1;
+        }
     }
 
     return 0;
