@@ -5,6 +5,8 @@
 #include <iomanip>
 #include <algorithm>
 #include <cctype>
+#include <utility>
+#include <queue>
 
 #include "ir.h"
 
@@ -21,7 +23,9 @@ struct Node {
     Operand op2;
     Operand op3;
     std::string opString;
-    int priority;
+    int priority = 0;
+    bool issued = false;
+    bool retired = false;
 };
 
 struct Edge {
@@ -42,7 +46,8 @@ class Graph {
         // Add an edge u → v
         void addEdge(int from, int to, int edgeType, int latency);
 
-        std::vector<Edge>& getDependencies(int id);
-        std::vector<Edge>& getUsers(int id);
+        std::vector<int> getDependencies(int id);
+        std::vector<int> getUsers(int id);
+        std::priority_queue<std::pair<int,int>> getLeafHeap();
         std::string toDot();
 };

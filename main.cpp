@@ -1,4 +1,5 @@
 #include "ir.h"
+#include "output.h"
 #include "parser.h"
 #include "renamer.h"
 #include "scanner.h"
@@ -28,6 +29,14 @@ void print_help() {
 }
 
 void print_IR(IRNode *root) {
+    root = root->next.get(); // Skip the root dummy node
+    while (root) {
+        cout << root->toString() << endl;
+        root = root->next.get();
+    }
+}
+
+void print_output(OutputNode *root) {
     root = root->next.get(); // Skip the root dummy node
     while (root) {
         cout << root->toString() << endl;
@@ -99,9 +108,11 @@ int main(int argc, char* argv[]) {
                 return 1;
             } else {
                 Renamer renamer;
-                Scheduler scheduler;
                 renamer.rename_IR(operations, parser.maxSR, parser.root);
-                scheduler.schedule(root.get());
+                Scheduler scheduler;
+                auto outputRoot = make_unique<OutputNode>("", ""); // Dummy root node
+                scheduler.schedule(root.get(), outputRoot.get());
+                print_output(outputRoot.get());
             }
         } catch (runtime_error &e) {
             return 1;

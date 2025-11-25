@@ -1,11 +1,13 @@
 #pragma once
 #include <iostream>
+#include <memory>
+#include <queue>
 #include <string>
 #include <unordered_map>
-#include <queue>
 
 #include "graph.h"
 #include "ir.h"
+#include "output.h"
 
 class Scheduler {
     public:
@@ -13,5 +15,5 @@ class Scheduler {
 
         void buildGraph(IRNode *root);
         void computeNodePriorities();
-        int schedule(IRNode *root);
+        int schedule(IRNode *root, OutputNode *outputRoot);
 };

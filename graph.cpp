@@ -67,8 +67,8 @@ int Graph::addNode(IRNode *operation) {
     Operand op3 = operation->op3;
     std::string opString = operation->toString();
 
-    // Add the node with 0 priority
-    nodes.push_back({id, opcode, op1, op2, op3, opString, 0});
+    // Add the node with 0 priority and false retired flag
+    nodes.push_back({id, opcode, op1, op2, op3, opString});
     edges.emplace_back();
     revEdges.emplace_back();
     return id;
@@ -101,10 +101,24 @@ void Graph::addEdge(int from, int to, int edgeType, int latency) {
     revEdges[to].push_back({from, edgeType, latency});
 }
 
-std::vector<Edge>& Graph::getDependencies(int id) {
-    return edges[id];
+std::vector<int> Graph::getDependencies(int id) {
+    std::vector<int> out;
+    for (const Edge& e : edges[id]) out.push_back(e.to_node);
+    return out;
 }
 
- std::vector<Edge>& Graph::getUsers(int id) {
-    return revEdges[id];
+std::vector<int> Graph::getUsers(int id) {
+    std::vector<int> out;
+    for (const Edge& e : revEdges[id]) out.push_back(e.to_node);
+    return out;
+}
+
+std::priority_queue<std::pair<int,int>> Graph::getLeafHeap() {
+    std::priority_queue<std::pair<int,int>> pq;
+    for (int i = 0, n = (int)nodes.size(); i < n; ++i) {
+        if (edges[i].empty()) {
+            pq.push({ nodes[i].priority, nodes[i].id });
+        }
+    }
+    return pq;
 }
