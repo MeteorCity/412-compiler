@@ -10,7 +10,7 @@ To build the program, run:
 make build
 ```
 
-This will compile all source files (main.cpp, scanner.cpp, parser.cpp, ir.cpp, renamer.cpp, scheduler.cpp) and produce an executable named: 412fe
+This will compile all source files (main.cpp, scanner.cpp, parser.cpp, ir.cpp, renamer.cpp, scheduler.cpp, output.cpp) and produce an executable named: schedule
 
 To clean up generated files, including object files and the executable, run:
 ```bash
