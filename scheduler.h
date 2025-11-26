@@ -13,6 +13,7 @@ class Scheduler {
     public:
         Graph dep_graph;
 
+        bool isValidOp(int opcode, int unit, bool seenOutput);
         void buildGraph(IRNode *root);
         void computeNodePriorities();
         int schedule(IRNode *root, OutputNode *outputRoot);

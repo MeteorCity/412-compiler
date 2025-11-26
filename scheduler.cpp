@@ -49,11 +49,31 @@ void printDictionary(const std::unordered_map<int, std::vector<int>>& dict) {
     }
 }
 
+bool Scheduler::isValidOp(int opcode, int unit, bool seenOutput) {
+    // Only the first unit can execute a load or store operation
+    if ((opcode == LOAD || opcode == STORE) && unit == 1) {
+        return false;
+    }
+
+    // Only the second unit can execute a mult operation
+    if (opcode == MULT && unit == 0) {
+        return false;
+    }
+
+    // Only one output can issue in a given cycle
+    if (opcode == OUTPUT && seenOutput) {
+        return false;
+    }
+
+    return true;
+}
+
 void Scheduler::buildGraph(IRNode *root) {
     std::unordered_map<int, int> map; // Maps VRs to node IDs
     int lastStore = -1;
-    std::vector<int> prevLoads;
-    std::vector<int> prevOutputs;
+    int lastOutput = -1;
+    int lastLoad = -1;
+    // int undefNode = dep_graph.addNode(nullptr);
 
     root = root->next.get(); // Skip the root dummy node
     
@@ -78,7 +98,7 @@ void Scheduler::buildGraph(IRNode *root) {
                 dep_graph.addEdge(node, lastStore, CONFLICT, 6);
             }
 
-            prevLoads.push_back(node);
+            lastLoad = node;
         } else if (root->opcode == OUTPUT) {
             // Add a conflict edge to the most recent store
             if (lastStore != -1) {
@@ -86,27 +106,25 @@ void Scheduler::buildGraph(IRNode *root) {
             }
 
             // Add a serialization edge to the most recent ouput
-            if (prevOutputs.size() != 0) {
-                dep_graph.addEdge(node, prevOutputs[prevOutputs.size() - 1], SERIAL, 1);
+            if (lastOutput != -1) {
+                dep_graph.addEdge(node, lastOutput, SERIAL, 1);
             }
 
-            prevOutputs.push_back(node);
+            lastOutput = node;
         } else if (root->opcode == STORE) {
             // Add a serialization edge to the most recent store
             if (lastStore != -1) {
                 dep_graph.addEdge(node, lastStore, SERIAL, 1);
             }
 
-            // Add a serialization edge to each previous load and output
-            for (int load : prevLoads) {
-                dep_graph.addEdge(node, load, SERIAL, 1);
+            // Add a serialization edge to the last load and output
+            if (lastLoad != -1) {
+                dep_graph.addEdge(node, lastLoad, SERIAL, 1);
             }
-            for (int output : prevOutputs) {
-                dep_graph.addEdge(node, output, SERIAL, 1);
+            if (lastOutput != -1) {
+                dep_graph.addEdge(node, lastOutput, SERIAL, 1);
             }
 
-            prevLoads.clear();
-            prevOutputs.clear();
             lastStore = node;
         }
 
@@ -180,18 +198,48 @@ int Scheduler::schedule(IRNode *root, OutputNode *outputRoot) {
     while (ready.size() != 0 || active.size() != 0) {
         std::vector<int> movedOps;
         auto new_node = std::make_unique<OutputNode>("", "");
+        bool seenOutput = false;
         for (int i = 0; i < NUM_UNITS; ++i) {
             if (ready.size() != 0) {
                 // Get the operation with the highest priority
-                int op = ready.top().second;
-                ready.pop();
+                std::vector<std::pair<int, int>> buffer;
+                int op = -1;
+                while (!ready.empty()) {
+                    auto top = ready.top();
+                    ready.pop();
+                    if (isValidOp(dep_graph.nodes[top.second].opcode, i, seenOutput)) {
+                        op = top.second;
+                        break;
+                    } else {
+                        buffer.push_back(top);
+                    }
+                }
 
-                // Add the operation to the functional unit
+                // Put invalid operations that we popped from heap back
+                for (std::pair<int, int> x : buffer) {
+                    ready.push(x);
+                }
+
+                // Ensure that we found a valid operation, if not add nop
+                if (op == -1) {
+                    if (i == 0) { // Terrible practice but whatever
+                        new_node->operation1 = "nop";
+                    } else if (i == 1) {
+                        new_node->operation2 = "nop";
+                    }
+                    continue;
+                }
+
+                // Add the valid operation to the functional unit
                 std::string opString = dep_graph.nodes[op].opString;
                 if (i == 0) { // Terrible practice but whatever
                     new_node->operation1 = opString;
                 } else if (i == 1) {
                     new_node->operation2 = opString;
+                }
+
+                if (dep_graph.nodes[op].opcode == OUTPUT) {
+                    seenOutput = true;
                 }
 
                 // Move the operation from ready to active
@@ -250,10 +298,23 @@ int Scheduler::schedule(IRNode *root, OutputNode *outputRoot) {
             if (opcode == LOAD || opcode == STORE || opcode == OUTPUT) {
                 for (const Edge &e : dep_graph.revEdges[op]) {
                     if (e.edgeType == SERIAL) {
-                        int early = e.to_node;
-                        if (dep_graph.nodes[early].issued) continue;
-                        ready.emplace(dep_graph.nodes[early].priority, early);
-                        dep_graph.nodes[early].issued = true;
+                        int user = e.to_node;
+                        if (dep_graph.nodes[user].issued) continue;
+
+                        // Calculate whether all the user's dependencies have retired
+                        bool allRetired = true;
+                        for (int dependency : dep_graph.getDependencies(user)) {
+                            if (!dep_graph.nodes[dependency].retired) {
+                                allRetired = false;
+                                break;
+                            }
+                        }
+
+                        // If all the dependencies have retired, add user to ready
+                        if (allRetired) {
+                            ready.emplace(dep_graph.nodes[user].priority, user);
+                            dep_graph.nodes[user].issued = true;
+                        }
                     }
                 }
             }
